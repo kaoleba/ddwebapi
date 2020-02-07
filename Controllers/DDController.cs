@@ -12,8 +12,7 @@ namespace DDWebApi.Controllers
     [ApiController]
     public class DDController : ControllerBase
     {
-        
-
+       
         [HttpGet]
         [Route("GetConfig")]
         public string GetConfig(string url)
