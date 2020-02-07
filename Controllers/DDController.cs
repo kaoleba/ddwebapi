@@ -7,11 +7,12 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 
 namespace DDWebApi.Controllers
-{
+{ 
     [Route("api/[controller]")]
     [ApiController]
     public class DDController : ControllerBase
     {
+        
 
         [HttpGet]
         [Route("GetConfig")]
