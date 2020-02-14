@@ -107,6 +107,31 @@ namespace DDWebApi
             }
         }
 
+        public T QueryFirstOrDefault<T>(string sql, object param = null)
+        {
+                using (IDbConnection db = CreateDbConnection())
+                {
+                    db.Open();
+                    return db.QueryFirstOrDefault<T>(sql, param);
+                }
+        }
+
+        public int ExecuteSql(string sql,object param=null, IDbTransaction transaction = null, int? commandTimeout = null)
+        {
+            if (commandTimeout == null)
+                commandTimeout = this.commandTimeout;
+            if (transaction == null || transaction.Connection == null)
+                using (IDbConnection db = CreateDbConnection())
+                {
+                    db.Open();
+                    return db.Execute(sql, param, transaction, commandTimeout);
+                }
+            else
+            {
+                return transaction.Connection.Execute(sql, param, null,commandTimeout);
+            }
+        }
+
         public T GetEntityById<T>(object id) where T : class
         {
             using (IDbConnection db = CreateDbConnection())
@@ -184,7 +209,7 @@ namespace DDWebApi
             }
         }
 
-        public List<T> GetPageList<T>(string sql, DbParameter[] param, string orderField, string orderType, int pageIndex, int pageSize)
+        public List<T> GetPageList<T>(string sql, Object param, string orderField, string orderType, int pageIndex, int pageSize)
         {
             using (IDbConnection db = CreateDbConnection())
             {

@@ -1,20 +1,24 @@
-﻿
-using Oracle.ManagedDataAccess.Client;
+﻿using AutoMapper;
 using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
 using System.IO;
-using System.Linq;
 using System.Net;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Cryptography;
 using System.Text;
-using System.Web;
 
 namespace DDWebApi
 {
-
+    public static class AutoMaperHelper
+    {
+        public static TDestination MapTo<TDestination, TSource>(this TSource source, TDestination des)
+        where TDestination : class
+        where TSource : class
+        {
+            if (source == null) return default(TDestination);
+            var config = new MapperConfiguration(cfg => cfg.CreateMap<TSource,TDestination>());
+            var mapper = config.CreateMapper();
+            return mapper.Map(source, des);
+        }
+    }
 
     public class HttpRequestHelper
     {
