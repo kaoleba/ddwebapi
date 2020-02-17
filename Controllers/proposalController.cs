@@ -94,9 +94,6 @@ namespace DDWebApi.Controllers
         public ActionResult<proposal> Get(string id)
         {
             var pro= db.GetEntityById<proposal>(id);
-            proposal pronew = new proposal();
-            pronew.proposal_title = "123";
-            var modyprp = pronew.MapTo(pro);
             return modyprp;
         }
 
