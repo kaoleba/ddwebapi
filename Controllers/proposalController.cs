@@ -94,7 +94,7 @@ namespace DDWebApi.Controllers
         public ActionResult<proposal> Get(string id)
         {
             var pro= db.GetEntityById<proposal>(id);
-            return modyprp;
+            return pro;
         }
 
         [HttpPost]
