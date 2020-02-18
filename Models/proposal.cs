@@ -345,6 +345,8 @@ namespace DDWebApi
         /// </summary>
         public String state { get; set; }
 
+        decimal score { get; set; }
+
         /// <summary>
         /// 备用字段3
         /// </summary>
@@ -355,5 +357,15 @@ namespace DDWebApi
             this.update_time = DateTime.Now;
         }
 
+    }
+
+
+    /**
+     * 打分情况
+     * */
+    public class ScoreList {
+        public string proposal_dept { get; set; }
+        public decimal score { get; set; }
+        public int monthorder { get; set; }
     }
 }

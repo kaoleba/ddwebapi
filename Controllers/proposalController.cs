@@ -94,10 +94,7 @@ namespace DDWebApi.Controllers
         public ActionResult<proposal> Get(string id)
         {
             var pro= db.GetEntityById<proposal>(id);
-            proposal pronew = new proposal();
-            pronew.proposal_title = "123";
-            var modyprp = pronew.MapTo(pro);
-            return modyprp;
+            return pro;
         }
 
         [HttpPost]
@@ -205,5 +202,41 @@ namespace DDWebApi.Controllers
                 return ex.Message;
             }
         }
+
+        //获取当月得分排名
+        [HttpGet]
+        [Route("MonthScoreList")]
+        [EnableCors("any")]
+        public ActionResult<List<ScoreList>> MonthScoreList() {
+            List<ScoreList> list = new List<ScoreList>();
+            try {
+                string sql = @"select proposal_dept,ROUND(avg(score),2) score from (select proposal_id,proposal_dept from proposal where state='3' and month(create_time)=month(now())) a left join (select proposal_id,ROUND(avg(score1),2) score from evaluate group by proposal_id) b on a.proposal_id=b.proposal_id group by proposal_dept order by score desc";
+                list=db.GetList<ScoreList>(sql);
+            }
+            catch (Exception ex) {
+                LogHelper.Error(ex.Message);
+            }
+            return list;
+        }
+
+        //获取部门得分排名
+        [HttpGet]
+        [Route("DeptScoreList")]
+        [EnableCors("any")]
+        public ActionResult<List<ScoreList>> DeptScoreList() {
+            List<ScoreList> list = new List<ScoreList>();
+            try
+            {
+                string sql = @"select proposal_dept,ROUND(avg(score),2) score,monthorder from (select proposal_id,proposal_dept,month(create_time) monthorder from proposal where state='3' and year(create_time)=year(now()) and proposal_dept='大数据中心') a left join (select proposal_id,ROUND(avg(score1),2) score from evaluate group by proposal_id) b on a.proposal_id=b.proposal_id group by monthorder order by monthorder desc";
+                list = db.GetList<ScoreList>(sql);                
+                
+            }
+            catch (Exception ex)
+            {
+                LogHelper.Error(ex.Message);
+            }
+            return list;
+        }
+
     }
 }
