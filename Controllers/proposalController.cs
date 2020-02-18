@@ -1,34 +1,28 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Dapper;
+﻿using Dapper;
 using Microsoft.AspNetCore.Cors;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using MySql.Data.MySqlClient;
-using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace DDWebApi.Controllers
-{ 
+{
     [Route("api/[controller]")]
     [ApiController]
     public class proposalController : ControllerBase
     {
-
-        DBHelper db = new DBHelper();
+        private DBHelper db = new DBHelper();
 
         // GET api/proposal
         [HttpGet]
         [EnableCors("any")]
-        public ActionResult<IEnumerable<proposal>> Get(int page,string state,string ny,string deptid)
+        public ActionResult<IEnumerable<proposal>> Get(int page, string state, string ny, string deptid)
         {
             try
             {
                 DynamicParameters pars = new DynamicParameters();
                 StringBuilder sql = new StringBuilder("select * from proposal  where ifnull(del_flag,0)=0");
-               
+
                 if (state == "参评建议")
                     sql.Append(" and state='3' ");
                 if (!string.IsNullOrEmpty(deptid))
@@ -40,7 +34,7 @@ namespace DDWebApi.Controllers
                 {
                     string StartDate = ny + "/01";
                     string EndDate = Convert.ToDateTime(StartDate).AddMonths(1).ToString("yyyy/MM/dd");
-                    sql.Append(" and create_time>='"+ StartDate+ "' and create_time<'" + EndDate+"'");
+                    sql.Append(" and create_time>='" + StartDate + "' and create_time<'" + EndDate + "'");
                 }
                 return db.GetPageList<proposal>(sql.ToString(), pars, "create_time", "desc", page, 20);
             }
@@ -54,7 +48,7 @@ namespace DDWebApi.Controllers
         [HttpGet]
         [EnableCors("any")]
         [Route("GetRateList")]
-        public ActionResult<IEnumerable<ratelistDto>> GetRateList(int page, string state, string ny,string evaluator_id)
+        public ActionResult<IEnumerable<ratelistDto>> GetRateList(int page, string state, string ny, string evaluator_id)
         {
             try
             {
@@ -93,7 +87,7 @@ namespace DDWebApi.Controllers
         [EnableCors("any")]
         public ActionResult<proposal> Get(string id)
         {
-            var pro= db.GetEntityById<proposal>(id);
+            var pro = db.GetEntityById<proposal>(id);
             return pro;
         }
 
@@ -113,12 +107,12 @@ namespace DDWebApi.Controllers
                 {
                     eva.Modify();
                     db.Update<evaluate>(eva);
-               }
+                }
                 return "";
             }
             catch (Exception ex)
             {
-                LogHelper.Error("打分异常："+ex.Message);
+                LogHelper.Error("打分异常：" + ex.Message);
                 return ex.Message;
             }
         }
@@ -173,7 +167,7 @@ namespace DDWebApi.Controllers
         [HttpGet]
         [Route("UpdateState")]
         [EnableCors("any")]
-        public string UpdateState(string id,string state)
+        public string UpdateState(string id, string state)
         {
             try
             {
@@ -188,8 +182,8 @@ namespace DDWebApi.Controllers
                         throw new Exception("只有提交状态建议能够参评！");
                     DynamicParameters parsquery = new DynamicParameters();
                     parsquery.Add("proposal_deptid", pro.proposal_deptid);
-                    parsquery.Add("Create_Time", pro.create_time,System.Data.DbType.DateTime);
-                    var resnum= db.QueryFirstOrDefault<int>("select count(1) from proposal where state='3' and TIMESTAMPDIFF(MONTH,Create_Time ,?Create_Time)=0 and proposal_deptid=?proposal_deptid", parsquery);
+                    parsquery.Add("Create_Time", pro.create_time, System.Data.DbType.DateTime);
+                    var resnum = db.QueryFirstOrDefault<int>("select count(1) from proposal where state='3' and TIMESTAMPDIFF(MONTH,Create_Time ,?Create_Time)=0 and proposal_deptid=?proposal_deptid", parsquery);
                     if (resnum >= 1)
                         throw new Exception("每月只能一条建议参评！");
                 }
@@ -207,13 +201,17 @@ namespace DDWebApi.Controllers
         [HttpGet]
         [Route("MonthScoreList")]
         [EnableCors("any")]
-        public ActionResult<List<ScoreList>> MonthScoreList() {
+        public ActionResult<List<ScoreList>> MonthScoreList()
+        {
             List<ScoreList> list = new List<ScoreList>();
-            try {
-                string sql = @"select proposal_dept,ROUND(avg(score),2) score from (select proposal_id,proposal_dept from proposal where state='3' and month(create_time)=month(now())) a left join (select proposal_id,ROUND(avg(score1),2) score from evaluate group by proposal_id) b on a.proposal_id=b.proposal_id group by proposal_dept order by score desc";
-                list=db.GetList<ScoreList>(sql);
+            try
+            {
+                string sql = @"select proposal_dept,ROUND(avg(score),2) score from (select proposal_id,proposal_dept from proposal where state='3' and month(create_time)=month(now())) a left join 
+(select proposal_id,ROUND(avg(score1),2) score from evaluate group by proposal_id) b on a.proposal_id=b.proposal_id group by proposal_dept order by score desc";
+                list = db.GetList<ScoreList>(sql);
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 LogHelper.Error(ex.Message);
             }
             return list;
@@ -223,13 +221,15 @@ namespace DDWebApi.Controllers
         [HttpGet]
         [Route("DeptScoreList")]
         [EnableCors("any")]
-        public ActionResult<List<ScoreList>> DeptScoreList() {
+        public ActionResult<List<ScoreList>> DeptScoreList()
+        {
             List<ScoreList> list = new List<ScoreList>();
             try
             {
-                string sql = @"select proposal_dept,ROUND(avg(score),2) score,monthorder from (select proposal_id,proposal_dept,month(create_time) monthorder from proposal where state='3' and year(create_time)=year(now()) and proposal_dept='大数据中心') a left join (select proposal_id,ROUND(avg(score1),2) score from evaluate group by proposal_id) b on a.proposal_id=b.proposal_id group by monthorder order by monthorder desc";
-                list = db.GetList<ScoreList>(sql);                
-                
+                string sql = @"select proposal_dept,ROUND(avg(score),2) score,monthorder from (select proposal_id,proposal_dept,month(create_time) monthorder from proposal where state='3' and year(create_time)=year(now()) and proposal_dept='大数据中心') a left join 
+(select proposal_id,ROUND(avg(score1),2) score from evaluate group by proposal_id) b on a.proposal_id=b.proposal_id group by monthorder order by monthorder desc";
+                list = db.GetList<ScoreList>(sql);
+
             }
             catch (Exception ex)
             {
