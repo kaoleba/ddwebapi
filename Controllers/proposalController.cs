@@ -36,6 +36,7 @@ namespace DDWebApi.Controllers
                     string EndDate = Convert.ToDateTime(StartDate).AddMonths(1).ToString("yyyy/MM/dd");
                     sql.Append(" and create_time>='" + StartDate + "' and create_time<'" + EndDate + "'");
                 }
+                LogHelper.Debug("查询建议列表"+sql.ToString());
                 return db.GetPageList<proposal>(sql.ToString(), pars, "create_time", "desc", page, 20);
             }
             catch (Exception ex)
@@ -53,26 +54,20 @@ namespace DDWebApi.Controllers
             try
             {
                 DynamicParameters pars = new DynamicParameters();
-                StringBuilder sql = new StringBuilder("select a.*,b.evaluator_id ,b.proposal_score_id ,b.score1 " +
-                    " from proposal a  left  join evaluate b on a.proposal_id=b.proposal_id where state='3' ");
-
+                StringBuilder sql = new StringBuilder("select a.*,b.evaluator_id ,b.proposal_score_id ,b.score1,b.score2 " +
+                    " from proposal a  left  join evaluate b on a.proposal_id=b.proposal_id  and (evaluator_id=?evaluator_id or evaluator_id is null) where state='3' ");
                 if (state == "未评建议")
                     sql.Append(" and b.evaluator_id is null");
                 if (state == "已评建议")
                     sql.Append(" and b.evaluator_id is not null");
-
-                if (!string.IsNullOrEmpty(evaluator_id))
-                {
-                    sql.Append(" and (evaluator_id=?evaluator_id or evaluator_id is null)");
-                    pars.Add("evaluator_id", evaluator_id);
-                }
-
+                 pars.Add("evaluator_id", evaluator_id);
                 if (!string.IsNullOrEmpty(ny))
                 {
                     string StartDate = ny + "/01";
                     string EndDate = Convert.ToDateTime(StartDate).AddMonths(1).ToString("yyyy/MM/dd");
                     sql.Append(" and create_time>='" + StartDate + "' and create_time<'" + EndDate + "'");
                 }
+                LogHelper.Debug("查询评分列表" + sql.ToString());
                 return db.GetPageList<ratelistDto>(sql.ToString(), pars, "create_time", "desc", page, 20);
             }
             catch (Exception ex)
@@ -183,8 +178,8 @@ namespace DDWebApi.Controllers
                     DynamicParameters parsquery = new DynamicParameters();
                     parsquery.Add("proposal_deptid", pro.proposal_deptid);
                     parsquery.Add("Create_Time", pro.create_time, System.Data.DbType.DateTime);
-                    var resnum = db.QueryFirstOrDefault<int>("select count(1) from proposal where state='3' and TIMESTAMPDIFF(MONTH,Create_Time ,?Create_Time)=0 and proposal_deptid=?proposal_deptid", parsquery);
-                    if (resnum >= 1)
+                    var resnum = db.QueryFirstOrDefault<int>("select count(1) from proposal where state='3' and date_format(Create_Time, '%Y-%m') = date_format(?Create_Time, '%Y-%m') and proposal_deptid=?proposal_deptid", parsquery);
+                    if (resnum >= 1) 
                         throw new Exception("每月只能一条建议参评！");
                 }
                 db.ExecuteSql("UPDATE proposal SET state= ?state WHERE proposal_id=?id ", pars);
@@ -206,8 +201,12 @@ namespace DDWebApi.Controllers
             List<ScoreList> list = new List<ScoreList>();
             try
             {
-                string sql = @"select proposal_dept,ROUND(avg(score),2) score from (select proposal_id,proposal_dept from proposal where state='3' and month(create_time)=month(now())) a left join 
-(select proposal_id,ROUND(avg(score1),2) score from evaluate group by proposal_id) b on a.proposal_id=b.proposal_id group by proposal_dept order by score desc";
+                //陈琪 2020/02/18 更改  将Month(create_time)=Month(now()) 更改为 date_format(create_time, '%Y-%m') = date_format(now(), '%Y-%m')
+                //原因 Month(201806)=Month(201906)
+                string sql = @"select proposal_dept,ROUND(avg(score),2) score from (select proposal_id,proposal_dept from proposal 
+                where state='3' and date_format(create_time, '%Y-%m') = date_format(now(), '%Y-%m')) a left join    
+                (select proposal_id,ROUND(avg(score1),2) score from evaluate group by proposal_id) b 
+                on a.proposal_id=b.proposal_id group by proposal_dept order by score desc";
                 list = db.GetList<ScoreList>(sql);
             }
             catch (Exception ex)
@@ -226,8 +225,11 @@ namespace DDWebApi.Controllers
             List<ScoreList> list = new List<ScoreList>();
             try
             {
-                string sql = @"select proposal_dept,ROUND(avg(score),2) score,monthorder from (select proposal_id,proposal_dept,month(create_time) monthorder from proposal where state='3' and year(create_time)=year(now()) and proposal_dept='大数据中心') a left join 
-(select proposal_id,ROUND(avg(score1),2) score from evaluate group by proposal_id) b on a.proposal_id=b.proposal_id group by monthorder order by monthorder desc";
+                string sql = @"select proposal_dept,ROUND(avg(score),2) score,monthorder from 
+                    (select proposal_id,proposal_dept,month(create_time) monthorder from proposal where state='3'
+                    and year(create_time)=year(now()) and proposal_dept='大数据中心') a left join 
+                    (select proposal_id,ROUND(avg(score1),2) score from evaluate group by proposal_id) b 
+                    on a.proposal_id=b.proposal_id group by monthorder order by monthorder desc";
                 list = db.GetList<ScoreList>(sql);
 
             }

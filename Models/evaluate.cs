@@ -41,17 +41,17 @@ namespace DDWebApi
         /// <summary>
         /// 得分1
         /// </summary>
-        public System.Int32? score1 { get; set; }
+        public System.Double score1 { get; set; }
 
         /// <summary>
         /// 得分2
         /// </summary>
-        public System.Int32? score2 { get; set; }
+        public System.Double score2 { get; set; }
 
         /// <summary>
         /// 得分3
         /// </summary>
-        public System.Int32? score3 { get; set; }
+        public System.Double score3 { get; set; }
 
         /// <summary>
         /// 备用字段1
@@ -71,11 +71,13 @@ namespace DDWebApi
         public void Create()
         {
             this.proposal_score_id = Guid.NewGuid().ToString();
+            this.score3 = this.score1 + this.score2;
             this.submit_time = DateTime.Now;
         }
 
         public void Modify()
         {
+            this.score3 = this.score1 + this.score2;
             this.submit_time = DateTime.Now;
         }
     }

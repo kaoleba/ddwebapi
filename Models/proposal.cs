@@ -345,12 +345,10 @@ namespace DDWebApi
         /// </summary>
         public String state { get; set; }
 
-        decimal score { get; set; }
 
-        /// <summary>
-        /// 备用字段3
-        /// </summary>
-        public int? score1 { get; set; }
+        public double score1 { get; set; }
+
+        public double score2 { get; set; }
 
         public void Modify()
         {
