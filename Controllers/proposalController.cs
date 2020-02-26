@@ -205,7 +205,7 @@ namespace DDWebApi.Controllers
                 //原因 Month(201806)=Month(201906)
                 string sql = @"select proposal_dept,ROUND(avg(score),2) score from (select proposal_id,proposal_dept from proposal 
                 where state='3' and date_format(create_time, '%Y-%m') = date_format(now(), '%Y-%m')) a left join    
-                (select proposal_id,ROUND(avg(score1),2) score from evaluate group by proposal_id) b 
+                (select proposal_id,ROUND(avg(score3),2) score from evaluate group by proposal_id) b 
                 on a.proposal_id=b.proposal_id group by proposal_dept order by score desc";
                 list = db.GetList<ScoreList>(sql);
             }
@@ -228,7 +228,7 @@ namespace DDWebApi.Controllers
                 string sql = @"select proposal_dept,ROUND(avg(score),2) score,monthorder from 
                     (select proposal_id,proposal_dept,month(create_time) monthorder from proposal where state='3'
                     and year(create_time)=year(now()) and proposal_dept='大数据中心') a left join 
-                    (select proposal_id,ROUND(avg(score1),2) score from evaluate group by proposal_id) b 
+                    (select proposal_id,ROUND(avg(score3),2) score from evaluate group by proposal_id) b 
                     on a.proposal_id=b.proposal_id group by monthorder order by monthorder desc";
                 list = db.GetList<ScoreList>(sql);
 
