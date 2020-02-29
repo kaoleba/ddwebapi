@@ -11,7 +11,7 @@ namespace DDWebApi.Controllers
     [ApiController]
     public class proposalController : ControllerBase
     {
-        private DBHelper db = new DBHelper();
+        private DBHelper db = new DBHelper(); 
 
         // GET api/proposal
         [HttpGet]
@@ -193,6 +193,7 @@ namespace DDWebApi.Controllers
         }
 
         //获取当月得分排名
+        //todo 验证工作建议是否所有领导均打分
         [HttpGet]
         [Route("MonthScoreList")]
         [EnableCors("any")]
@@ -216,22 +217,22 @@ namespace DDWebApi.Controllers
             return list;
         }
 
-        //获取部门得分排名
+        //获取部门得分情况
+        //todo 验证工作建议是否所有领导均打分
         [HttpGet]
         [Route("DeptScoreList")]
         [EnableCors("any")]
-        public ActionResult<List<ScoreList>> DeptScoreList()
+        public ActionResult<List<ScoreList>> DeptScoreList(string deptId)
         {
             List<ScoreList> list = new List<ScoreList>();
             try
             {
                 string sql = @"select proposal_dept,ROUND(avg(score),2) score,monthorder from 
                     (select proposal_id,proposal_dept,month(create_time) monthorder from proposal where state='3'
-                    and year(create_time)=year(now()) and proposal_dept='大数据中心') a left join 
+                    and year(create_time)=year(now()) and proposal_deptid='"+deptId+@"') a left join 
                     (select proposal_id,ROUND(avg(score3),2) score from evaluate group by proposal_id) b 
                     on a.proposal_id=b.proposal_id group by monthorder order by monthorder desc";
                 list = db.GetList<ScoreList>(sql);
-
             }
             catch (Exception ex)
             {
@@ -239,6 +240,5 @@ namespace DDWebApi.Controllers
             }
             return list;
         }
-
     }
 }
