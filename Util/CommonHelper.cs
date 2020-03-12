@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.IO;
 using System.Net;
@@ -7,6 +8,30 @@ using System.Text;
 
 namespace DDWebApi
 {
+    /// <summary>
+    /// 扩展类
+    /// </summary>
+    public static class Extension
+    {
+        /// <summary>
+        /// 获取客户Ip
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public static string GetClientUserIp(this HttpContext context)
+        {
+
+            string ip = "未得到Ip地址";
+            try
+            {
+                ip = context.Connection.RemoteIpAddress.MapToIPv4().ToString();
+            }
+            catch 
+            { }
+            return ip;
+        }
+    }
+
     public static class AutoMaperHelper
     {
         public static TDestination MapTo<TDestination, TSource>(this TSource source, TDestination des)

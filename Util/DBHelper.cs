@@ -58,7 +58,7 @@ namespace DDWebApi
                 db.Open();
             }
             isOpenTrans = db.BeginTransaction();
-            return db.BeginTransaction();
+            return isOpenTrans;
         }
 
         /// <summary>

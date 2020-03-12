@@ -173,8 +173,8 @@ namespace DDWebApi.Controllers
                 if (state == "3")
                 {
                     proposal pro = db.GetEntityById<proposal>(id);
-                    if (pro.state != "1")
-                        throw new Exception("只有提交状态建议能够参评！");
+                    //if (pro.state != "1")
+                    //    throw new Exception("只有提交状态建议能够参评！");
                     DynamicParameters parsquery = new DynamicParameters();
                     parsquery.Add("proposal_deptid", pro.proposal_deptid);
                     parsquery.Add("Create_Time", pro.create_time, System.Data.DbType.DateTime);
