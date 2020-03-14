@@ -240,5 +240,24 @@ namespace DDWebApi.Controllers
             }
             return list;
         }
+
+        //获取部门得分情况
+        //todo 验证工作建议是否所有领导均打分
+        [HttpGet]
+        [Route("AdviceInfo")]
+        [EnableCors("any")]
+        public proposal AdviceInfo(string deptid,int monthorder) {
+            proposal p = new proposal();
+            try {
+                string date = DateTime.Now.Year + "-" + (100 + monthorder).ToString().Substring(1,2);
+                string sql = "select * from proposal where proposal_deptid='"+deptid+"' and date_format(create_time,'%Y-%m')='"+date+"' and state=3 limit 0,1";
+                p= db.GetEntity<proposal>(sql);
+            }
+            catch (Exception ex) {
+                LogHelper.Error(ex.Message);
+            }
+            return p;
+        }
+
     }
 }
