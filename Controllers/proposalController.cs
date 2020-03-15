@@ -250,7 +250,7 @@ namespace DDWebApi.Controllers
             proposal p = new proposal();
             try {
                 string date = DateTime.Now.Year + "-" + (100 + monthorder).ToString().Substring(1,2);
-                string sql = "select * from proposal where proposal_deptid='"+deptid+"' and date_format(create_time,'%Y-%m')='"+date+"' and state=3 limit 0,1";
+                string sql = "select * from proposal where (proposal_deptid='"+deptid+"' or proposal_dept='"+deptid+"') and date_format(create_time,'%Y-%m')='"+date+"' and state=3 limit 0,1";
                 p= db.GetEntity<proposal>(sql);
             }
             catch (Exception ex) {
