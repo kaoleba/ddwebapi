@@ -21,7 +21,7 @@ namespace DDWebApi
             if (DBName.ToUpper().IndexOf("ORACLE") >= 0)
                 return new Oracle.ManagedDataAccess.Client.OracleConnection(ConnectionString);
             if (DBName.ToUpper().IndexOf("MSSQL") >= 0)
-                return new System.Data.SqlClient.SqlConnection(ConnectionString);
+                return new System.Data.SqlClient.SqlConnection("Data Source=172.16.0.35;Initial Catalog=services;User ID=sa;Password=lkjt8235!");
             if (DBName.ToUpper().IndexOf("MYSQL") >= 0)
                 return new MySql.Data.MySqlClient.MySqlConnection(ConnectionString);
             return new System.Data.SqlClient.SqlConnection(ConnectionString);

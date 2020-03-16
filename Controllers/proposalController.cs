@@ -192,14 +192,41 @@ namespace DDWebApi.Controllers
             }
         }
 
+        //判断提报建议是否全部完成打分
+        //date:yyyy-MM
+        public bool CheckEvaluateDone(string deptid,string date){
+            string sql = @"select count(proposal_score_id) num from proposal a left join evaluate b
+                            on a.proposal_id=b.proposal_id
+                            where state='3' and date_format(create_time,'%Y-%m')='"+date+"'";
+            if (deptid != "") {
+                sql += " and proposal_deptid='"+deptid+"'";
+            }
+            sql += @" group by proposal_score_id having num<" + LeaderDDID().Count;
+            if (new DBHelper().GetList<int>(sql).Count > 0) {
+                return false;
+            }
+            return true;
+        }
+
+        //获取领导班子钉钉ID
+        public List<string> LeaderDDID() {
+            DBHelper ssdb = new DBHelper("MSSQL");
+            List<string> list = ssdb.GetList<string>("select DingTalk from msgcenter_person where DeptCode='L10101' and gwzt='01' and DingTalk is not null");//获取领导班子DingTalk列表
+            return list;
+        }
+
         //获取当月得分排名
         //todo 验证工作建议是否所有领导均打分
         [HttpGet]
         [Route("MonthScoreList")]
         [EnableCors("any")]
         public ActionResult<List<ScoreList>> MonthScoreList()
-        {
+        {            
             List<ScoreList> list = new List<ScoreList>();
+            if (!CheckEvaluateDone("", DateTime.Now.ToString("yyyy-MM")))
+            {
+                return list;
+            }
             try
             {
                 //陈琪 2020/02/18 更改  将Month(create_time)=Month(now()) 更改为 date_format(create_time, '%Y-%m') = date_format(now(), '%Y-%m')
@@ -233,6 +260,10 @@ namespace DDWebApi.Controllers
                     (select proposal_id,ROUND(avg(score3),2) score from evaluate group by proposal_id) b 
                     on a.proposal_id=b.proposal_id group by monthorder order by monthorder desc";
                 list = db.GetList<ScoreList>(sql);
+                if (!CheckEvaluateDone(deptId, DateTime.Now.ToString("yyyy-MM")))
+                {
+                    list[0].score = -1;
+                }
             }
             catch (Exception ex)
             {
