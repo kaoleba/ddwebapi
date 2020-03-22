@@ -36,6 +36,7 @@ namespace DDWebApi
         public string vote_dept { get; set; }
         public string vote_detail_name { get; set; }
         public int count { get; set; }
+        public string vote_detail_def3 { get; set; }
     }
 
 

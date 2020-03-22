@@ -33,8 +33,8 @@ namespace DDWebApi.Controllers
         [HttpGet]
         [EnableCors("any")]
         [Route("CheckSubmit")]
-        public int CheckSubmit(string userid) {
-            string sql = "select count(*) from vote_detail where vote_detail_def1='"+userid+"'";
+        public int CheckSubmit(string userid,string type) {
+            string sql = "select count(*) from vote_detail where vote_detail_def1='"+userid+"' and vote_detail_def3='"+type+"'";
             return db.GetEntity<int>(sql);
         }
 
@@ -43,7 +43,7 @@ namespace DDWebApi.Controllers
         [Route("report")]
         public List<report> Report()
         {
-            string sql = "select vote_dept,vote_detail_name,count(*) count from vote_detail a left join vote b on a.vote_id=b.vote_id group by vote_dept,vote_detail_name";
+            string sql = "select vote_dept,vote_detail_name,count(*) count,vote_detail_def3 from vote_detail a left join vote b on a.vote_id=b.vote_id group by vote_dept,vote_detail_name,vote_detail_def3";
             return db.GetList<report>(sql);
         }
 
