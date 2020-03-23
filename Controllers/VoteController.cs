@@ -43,8 +43,8 @@ namespace DDWebApi.Controllers
         [Route("report")]
         public List<report> Report(string type)
         {
-            string sql = @"select vote_dept,vote_detail_name,count(*) count from vote_detail a left join vote b on a.vote_id=b.vote_idwhere vote_detail_def3='"+type+@"'
-group by vote_dept,vote_detail_name order by count desc";
+            string sql = @"select vote_dept,vote_detail_name,illegal_flag,count(*) count from vote_detail a left join vote b on a.vote_id=b.vote_id
+where vote_detail_def3='"+type+"' group by vote_dept,vote_detail_name,illegal_flag order by count desc,vote_detail_name,illegal_flag";
             return db.GetList<report>(sql);
         }
 
