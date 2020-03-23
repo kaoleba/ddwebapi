@@ -16,10 +16,12 @@ namespace DDWebApi.Controllers
         // GET api/proposal
         [HttpGet]
         [EnableCors("any")]
-        public ActionResult<IEnumerable<proposal>> Get(int page, string state, string ny, string deptid)
+        public ActionResult<IEnumerable<proposal>> Get(int? page, string state, string ny, string deptid)
         {
             try
             {
+                if (page is null)
+                    return null;
                 DynamicParameters pars = new DynamicParameters();
                 StringBuilder sql = new StringBuilder("select * from proposal  where ifnull(del_flag,0)=0");
 
@@ -37,7 +39,7 @@ namespace DDWebApi.Controllers
                     sql.Append(" and create_time>='" + StartDate + "' and create_time<'" + EndDate + "'");
                 }
                 LogHelper.Debug("查询建议列表"+sql.ToString());
-                return db.GetPageList<proposal>(sql.ToString(), pars, "create_time", "desc", page, 20);
+                return db.GetPageList<proposal>(sql.ToString(), pars, "create_time", "desc", Convert.ToInt32(page), 20);
             }
             catch (Exception ex)
             {
@@ -49,10 +51,12 @@ namespace DDWebApi.Controllers
         [HttpGet]
         [EnableCors("any")]
         [Route("GetRateList")]
-        public ActionResult<IEnumerable<ratelistDto>> GetRateList(int page, string state, string ny, string evaluator_id)
+        public ActionResult<IEnumerable<ratelistDto>> GetRateList(int? page,string state, string ny, string evaluator_id)
         {
             try
             {
+                if (page is null)
+                    return null;
                 DynamicParameters pars = new DynamicParameters();
                 StringBuilder sql = new StringBuilder("select a.*,b.evaluator_id ,b.proposal_score_id ,b.score1,b.score2 " +
                     " from proposal a  left  join evaluate b on a.proposal_id=b.proposal_id  and (evaluator_id=?evaluator_id or evaluator_id is null) where state='3' ");
@@ -68,7 +72,7 @@ namespace DDWebApi.Controllers
                     sql.Append(" and create_time>='" + StartDate + "' and create_time<'" + EndDate + "'");
                 }
                 LogHelper.Debug("查询评分列表" + sql.ToString());
-                return db.GetPageList<ratelistDto>(sql.ToString(), pars, "create_time", "desc", page, 20);
+                return db.GetPageList<ratelistDto>(sql.ToString(), pars, "create_time", "desc",Convert.ToInt32(page), 20);
             }
             catch (Exception ex)
             {
