@@ -41,9 +41,10 @@ namespace DDWebApi.Controllers
         [HttpGet]
         [EnableCors("any")]
         [Route("report")]
-        public List<report> Report()
+        public List<report> Report(string type)
         {
-            string sql = "select vote_dept,vote_detail_name,count(*) count,vote_detail_def3 from vote_detail a left join vote b on a.vote_id=b.vote_id group by vote_dept,vote_detail_name,vote_detail_def3";
+            string sql = @"select vote_dept,vote_detail_name,count(*) count from vote_detail a left join vote b on a.vote_id=b.vote_idwhere vote_detail_def3='"+type+@"'
+group by vote_dept,vote_detail_name order by count desc";
             return db.GetList<report>(sql);
         }
 
