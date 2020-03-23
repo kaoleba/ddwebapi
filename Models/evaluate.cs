@@ -73,6 +73,7 @@ namespace DDWebApi
             this.proposal_score_id = Guid.NewGuid().ToString();
             this.score3 = this.score1 + this.score2;
             this.submit_time = DateTime.Now;
+            this.def3 = "DD";
         }
 
         public void Modify()

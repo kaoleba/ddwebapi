@@ -125,6 +125,7 @@ namespace DDWebApi
             this.create_time = DateTime.Now;
             this.state = "0";
             this.del_flag = "0";
+            this.proposal_def3 = "DD";
         }
 
         public void Modify()
@@ -140,7 +141,6 @@ namespace DDWebApi
     /// </summary>
     public class proposalDto
     {
-
         [ExplicitKey]
         /// <summary>
         /// 工作建议主键
@@ -187,15 +187,6 @@ namespace DDWebApi
         /// </summary>
         public String host_user { get; set; }
 
-        /// <summary>
-        /// 创建人id
-        /// </summary>
-        public String creatorid { get; set; }
-
-        /// <summary>
-        /// 创建人
-        /// </summary>
-        public String creator { get; set; }
 
         /// <summary>
         /// 提报部门id
@@ -208,12 +199,6 @@ namespace DDWebApi
         public String proposal_dept { get; set; }
 
         /// <summary>
-        /// 工作建议的解决方案
-        /// </summary>
-        public String proposal_project { get; set; }
-
-
-        /// <summary>
         /// 更新时间
         /// </summary>
         public DateTime? update_time { get; set; }
@@ -223,15 +208,6 @@ namespace DDWebApi
         /// </summary>
         public String proposal_def1 { get; set; }
 
-        /// <summary>
-        /// 备用字段2
-        /// </summary>
-        public String proposal_def2 { get; set; }
-
-        /// <summary>
-        /// 备用字段3
-        /// </summary>
-        public String proposal_def3 { get; set; }
 
         public void Modify()
         {
