@@ -11,7 +11,7 @@ namespace DDWebApi.Controllers
     [ApiController]
     public class proposalController : ControllerBase
     {
-        private DBHelper db = new DBHelper(); 
+        private DBHelper db = new DBHelper();
 
         // GET api/proposal
         [HttpGet]
@@ -38,7 +38,7 @@ namespace DDWebApi.Controllers
                     string EndDate = Convert.ToDateTime(StartDate).AddMonths(1).ToString("yyyy/MM/dd");
                     sql.Append(" and create_time>='" + StartDate + "' and create_time<'" + EndDate + "'");
                 }
-                LogHelper.Debug("查询建议列表"+sql.ToString());
+                LogHelper.Debug("查询建议列表" + sql.ToString());
                 return db.GetPageList<proposal>(sql.ToString(), pars, "create_time", "desc", Convert.ToInt32(page), 20);
             }
             catch (Exception ex)
@@ -51,7 +51,7 @@ namespace DDWebApi.Controllers
         [HttpGet]
         [EnableCors("any")]
         [Route("GetRateList")]
-        public ActionResult<IEnumerable<ratelistDto>> GetRateList(int? page,string state, string ny, string evaluator_id)
+        public ActionResult<IEnumerable<ratelistDto>> GetRateList(int? page, string state, string ny, string evaluator_id)
         {
             try
             {
@@ -64,7 +64,7 @@ namespace DDWebApi.Controllers
                     sql.Append(" and b.evaluator_id is null");
                 if (state == "已评建议")
                     sql.Append(" and b.evaluator_id is not null");
-                 pars.Add("evaluator_id", evaluator_id);
+                pars.Add("evaluator_id", evaluator_id);
                 if (!string.IsNullOrEmpty(ny))
                 {
                     string StartDate = ny + "/01";
@@ -72,7 +72,7 @@ namespace DDWebApi.Controllers
                     sql.Append(" and create_time>='" + StartDate + "' and create_time<'" + EndDate + "'");
                 }
                 LogHelper.Debug("查询评分列表" + sql.ToString());
-                return db.GetPageList<ratelistDto>(sql.ToString(), pars, "create_time", "desc",Convert.ToInt32(page), 20);
+                return db.GetPageList<ratelistDto>(sql.ToString(), pars, "create_time", "desc", Convert.ToInt32(page), 20);
             }
             catch (Exception ex)
             {
@@ -183,7 +183,7 @@ namespace DDWebApi.Controllers
                     parsquery.Add("proposal_deptid", pro.proposal_deptid);
                     parsquery.Add("Create_Time", pro.create_time, System.Data.DbType.DateTime);
                     var resnum = db.QueryFirstOrDefault<int>("select count(1) from proposal where state='3' and date_format(Create_Time, '%Y-%m') = date_format(?Create_Time, '%Y-%m') and proposal_deptid=?proposal_deptid", parsquery);
-                    if (resnum >= 1) 
+                    if (resnum >= 1)
                         throw new Exception("每月只能一条建议参评！");
                 }
                 db.ExecuteSql("UPDATE proposal SET state= ?state WHERE proposal_id=?id ", pars);
@@ -198,23 +198,26 @@ namespace DDWebApi.Controllers
 
         //判断提报建议是否全部完成打分
         //date:yyyy-MM
-        public bool CheckEvaluateDone(string deptid,string date){
-            string sql = @"select count(proposal_score_id) num from proposal a left join evaluate b
+        public bool CheckEvaluateDone(string deptid, string date,int count)
+        {
+            string sql = @"select count(1)  from proposal a left join evaluate b
                             on a.proposal_id=b.proposal_id
-                            where state='3' and date_format(create_time,'%Y-%m')='"+date+"'";
-            if (deptid != "") {
-                sql += " and proposal_deptid='"+deptid+"'";
+                            where state='3' and date_format(create_time,'%Y-%m')='" + date + "'";
+            if (deptid != "")
+            {
+                sql += " and proposal_deptid='" + deptid + "'";
             }
-            sql += @" group by proposal_score_id having num<" + LeaderDDID().Count;
-            if (new DBHelper().GetList<int>(sql).Count > 0) {
+            if (new DBHelper().GetList<int>(sql).Count < count)
+            {
                 return false;
             }
             return true;
         }
 
         //获取领导班子钉钉ID
-        public List<string> LeaderDDID() {
-            DBHelper ssdb = new DBHelper("MSSQL");
+        public List<string> LeaderDDID()
+        {
+            DBHelper ssdb = new DBHelper("MSSQLCon");
             List<string> list = ssdb.GetList<string>("select DingTalk from msgcenter_person where DeptCode='L10101' and gwzt='01' and DingTalk is not null");//获取领导班子DingTalk列表
             return list;
         }
@@ -225,9 +228,9 @@ namespace DDWebApi.Controllers
         [Route("MonthScoreList")]
         [EnableCors("any")]
         public ActionResult<List<ScoreList>> MonthScoreList()
-        {            
+        {
             List<ScoreList> list = new List<ScoreList>();
-            if (!CheckEvaluateDone("", DateTime.Now.ToString("yyyy-MM")))
+            if (!CheckEvaluateDone("", DateTime.Now.ToString("yyyy-MM"), LeaderDDID().Count))
             {
                 return list;
             }
@@ -260,13 +263,17 @@ namespace DDWebApi.Controllers
             {
                 string sql = @"select proposal_dept,ROUND(avg(score),2) score,monthorder from 
                     (select proposal_id,proposal_dept,month(create_time) monthorder from proposal where state='3'
-                    and year(create_time)=year(now()) and proposal_deptid='"+deptId+@"') a left join 
+                    and year(create_time)=year(now()) and proposal_deptid='" + deptId + @"') a left join 
                     (select proposal_id,ROUND(avg(score3),2) score from evaluate group by proposal_id) b 
                     on a.proposal_id=b.proposal_id group by monthorder order by monthorder desc";
                 list = db.GetList<ScoreList>(sql);
-                if (!CheckEvaluateDone(deptId, DateTime.Now.ToString("yyyy-MM")))
+                int count = LeaderDDID().Count;
+                for (int i = 0; i <= list.Count; i++)
                 {
-                    list[0].score = -1;
+                    if (!CheckEvaluateDone(deptId, DateTime.Now.ToString("yyyy-")+ list[i].monthorder.ToString().PadLeft(2, '0'),count))
+                    {
+                        list[i].score = -1;
+                    }
                 }
             }
             catch (Exception ex)
@@ -275,24 +282,5 @@ namespace DDWebApi.Controllers
             }
             return list;
         }
-
-        //获取部门得分情况
-        //todo 验证工作建议是否所有领导均打分
-        [HttpGet]
-        [Route("AdviceInfo")]
-        [EnableCors("any")]
-        public proposal AdviceInfo(string deptid,int monthorder) {
-            proposal p = new proposal();
-            try {
-                string date = DateTime.Now.Year + "-" + (100 + monthorder).ToString().Substring(1,2);
-                string sql = "select * from proposal where (proposal_deptid='"+deptid+"' or proposal_dept='"+deptid+"') and date_format(create_time,'%Y-%m')='"+date+"' and state=3 limit 0,1";
-                p= db.GetEntity<proposal>(sql);
-            }
-            catch (Exception ex) {
-                LogHelper.Error(ex.Message);
-            }
-            return p;
-        }
-
     }
 }
