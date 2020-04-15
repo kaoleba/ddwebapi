@@ -207,7 +207,7 @@ namespace DDWebApi.Controllers
             {
                 sql += " and proposal_deptid='" + deptid + "'";
             }
-            if (new DBHelper().GetList<int>(sql).Count < count)
+            if ( 9 > count)
             {
                 return false;
             }
@@ -218,7 +218,7 @@ namespace DDWebApi.Controllers
         public List<string> LeaderDDID()
         {
             DBHelper ssdb = new DBHelper("MSSQLCon");
-            List<string> list = ssdb.GetList<string>("select DingTalk from msgcenter_person where DeptCode='L10101' and gwzt='01' and DingTalk is not null");//获取领导班子DingTalk列表
+            List<string> list = ssdb.GetList<string>("select top 9 DingTalk from msgcenter_person where DeptCode='L10101' and gwzt='01' and DingTalk is not null");//获取领导班子DingTalk列表
             return list;
         }
 
@@ -238,8 +238,8 @@ namespace DDWebApi.Controllers
             {
                 //陈琪 2020/02/18 更改  将Month(create_time)=Month(now()) 更改为 date_format(create_time, '%Y-%m') = date_format(now(), '%Y-%m')
                 //原因 Month(201806)=Month(201906)
-                string sql = @"select proposal_dept,ROUND(avg(score),2) score from (select proposal_id,proposal_dept from proposal 
-                where state='3' and date_format(create_time, '%Y-%m') = date_format(now(), '%Y-%m')) a left join    
+                string sql = @"select proposal_dept,ROUND(avg(score),2)*2 score from (select proposal_id,proposal_dept from proposal 
+                where state='3' and date_format(create_time, '%Y-%m') = date_format(date_sub(NOW(), interval 1 MONTH), '%Y-%m')) a left join    
                 (select proposal_id,ROUND(avg(score3),2) score from evaluate group by proposal_id) b 
                 on a.proposal_id=b.proposal_id group by proposal_dept order by score desc";
                 list = db.GetList<ScoreList>(sql);
@@ -261,7 +261,7 @@ namespace DDWebApi.Controllers
             List<ScoreList> list = new List<ScoreList>();
             try
             {
-                string sql = @"select proposal_dept,ROUND(avg(score),2) score,monthorder from 
+                string sql = @"select proposal_dept,ROUND(avg(score),2)*2 score,monthorder from 
                     (select proposal_id,proposal_dept,month(create_time) monthorder from proposal where state='3'
                     and year(create_time)=year(now()) and proposal_deptid='" + deptId + @"') a left join 
                     (select proposal_id,ROUND(avg(score3),2) score from evaluate group by proposal_id) b 
@@ -281,6 +281,25 @@ namespace DDWebApi.Controllers
                 LogHelper.Error(ex.Message);
             }
             return list;
+        }
+
+            //获取部门得分情况
+        //todo 验证工作建议是否所有领导均打分
+        [HttpGet]
+        [Route("AdviceInfo")]
+        [EnableCors("any")]
+        public proposal AdviceInfo(string deptid,int monthorder) {
+            proposal p = new proposal();
+            try {
+                string date = DateTime.Now.Year + "-" + (100 + monthorder).ToString().Substring(1,2);
+                string sql = "select * from proposal where proposal_dept='"+deptid+"' and date_format(create_time,'%Y-%m')='"+date+"' and state=3 limit 0,1";
+                p= db.GetEntity<proposal>(sql);
+                LogHelper.Debug(sql);
+            }
+            catch (Exception ex) {
+                LogHelper.Error(ex.Message);
+            }
+            return p;
         }
     }
 }
