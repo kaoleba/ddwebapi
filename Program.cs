@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using DDWebApi.Controllers;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -14,6 +15,8 @@ namespace DDWebApi
     {
         public static void Main(string[] args)
         {
+            //tengdaHelper.GetNewsList();
+
             CreateWebHostBuilder(args).Build().Run();
         }
 

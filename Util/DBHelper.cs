@@ -98,6 +98,15 @@ namespace DDWebApi
             }
         }
 
+        public List<T> GetList<T>(string sql, object param = null)
+        {
+            using (IDbConnection db = CreateDbConnection())
+            {
+                db.Open();
+                return db.Query<T>(sql, param).ToList();
+            }
+        }
+
         public T GetEntity<T>(string sql)
         {
             using (IDbConnection db = CreateDbConnection())

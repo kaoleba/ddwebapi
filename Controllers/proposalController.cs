@@ -207,7 +207,10 @@ namespace DDWebApi.Controllers
             {
                 sql += " and proposal_deptid='" + deptid + "'";
             }
-            if ( 9 > count)
+
+            var newcount = db.QueryFirstOrDefault<int>(sql);
+
+            if (  count> newcount)
             {
                 return false;
             }
@@ -218,7 +221,7 @@ namespace DDWebApi.Controllers
         public List<string> LeaderDDID()
         {
             DBHelper ssdb = new DBHelper("MSSQLCon");
-            List<string> list = ssdb.GetList<string>("select top 9 DingTalk from msgcenter_person where DeptCode='L10101' and gwzt='01' and DingTalk is not null");//获取领导班子DingTalk列表
+            List<string> list = ssdb.GetList<string>("select  DingTalk from msgcenter_person where DeptCode='L10101' and gwzt='01' and DingTalk is not null");//获取领导班子DingTalk列表
             return list;
         }
 
@@ -227,20 +230,29 @@ namespace DDWebApi.Controllers
         [HttpGet]
         [Route("MonthScoreList")]
         [EnableCors("any")]
-        public ActionResult<List<ScoreList>> MonthScoreList()
+        public ActionResult<List<ScoreList>> MonthScoreList(string ny="")
         {
             List<ScoreList> list = new List<ScoreList>();
-            if (!CheckEvaluateDone("", DateTime.Now.ToString("yyyy-MM"), LeaderDDID().Count))
-            {
-                return list;
-            }
+            ny = DateTime.Now.AddMonths(-2).ToString("yyyy-MM");
+            //if (ny==""&&!CheckEvaluateDone("", DateTime.Now.ToString("yyyy-MM"), LeaderDDID().Count))
+            //{
+            //    return list;
+            //}
             try
             {
                 //陈琪 2020/02/18 更改  将Month(create_time)=Month(now()) 更改为 date_format(create_time, '%Y-%m') = date_format(now(), '%Y-%m')
                 //原因 Month(201806)=Month(201906)
-                string sql = @"select proposal_dept,ROUND(avg(score),2)*2 score from (select proposal_id,proposal_dept from proposal 
-                where state='3' and date_format(create_time, '%Y-%m') = date_format(date_sub(NOW(), interval 1 MONTH), '%Y-%m')) a left join    
-                (select proposal_id,ROUND(avg(score3),2) score from evaluate group by proposal_id) b 
+                string sql = @"select proposal_dept,ROUND(avg(score),2)*2 score,proposal_title from (select proposal_id,proposal_dept,proposal_title from proposal 
+                where state='3'";
+                if (ny == "")
+                {
+                    sql += " and date_format(create_time, '%Y-%m') = date_format(date_sub(NOW(), interval 1 MONTH), '%Y-%m')) a";
+                }
+                else
+                {
+                    sql += " and date_format(create_time, '%Y-%m') ='"+ ny+"') a";
+                }
+                sql +=@" left join (select proposal_id,ROUND(avg(score3),2) score from evaluate group by proposal_id) b 
                 on a.proposal_id=b.proposal_id group by proposal_dept order by score desc";
                 list = db.GetList<ScoreList>(sql);
             }

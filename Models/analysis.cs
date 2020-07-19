@@ -236,7 +236,8 @@ namespace DDWebApi
 
         public void Modify()
         {
-            this.score3 = this.score1 + this.score2;
+            this.client = "DD";
+            this.score_total = this.score1 + this.score2 + this.score3 + this.score4 + this.score5;
             this.submit_time = DateTime.Now;
         }
     }

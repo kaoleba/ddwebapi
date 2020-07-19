@@ -1,13 +1,9 @@
-﻿using Dapper;
-using DingTalk.Api;
+﻿using DingTalk.Api;
 using DingTalk.Api.Request;
 using DingTalk.Api.Response;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
-using System.Linq;
 
 namespace DDWebApi
 {
@@ -22,7 +18,7 @@ namespace DDWebApi
         private static string Appsecret = "8Z3lI8FiM0AVi5suKlJ2fJ6qM6eAepx8UOrivuOqkEHT4nQ5x-lOG4qtYUumWu8U";
 
         /// <summary>
-        /// 获取JSAPI鉴权
+        /// 获取JSAPI鉴权（获取用户信息用不到）
         /// </summary>
         /// <param name="url"></param>
         /// <returns></returns>
@@ -121,7 +117,7 @@ namespace DDWebApi
         }
 
         /// <summary>
-        /// 获取用户详情
+        /// 获取钉钉部门信息
         /// </summary>
         /// <returns></returns>
         public static ResponseResult GetDeptName(string Id, string token = "")
@@ -138,7 +134,7 @@ namespace DDWebApi
                 OapiDepartmentGetResponse rsp = client.Execute(req, token);
                 if (rsp.Errmsg != "ok")
                 {
-                    res.errorMsg = rsp.Errmsg;
+                    res.errorMsg = rsp.ErrMsg;
                 }
                 else
                 {
@@ -150,6 +146,205 @@ namespace DDWebApi
                 res.errorMsg = ex.Message;
             }
 
+            return res;
+        }
+
+        /// <summary>
+        /// 发送通知信息
+        /// </summary>
+        /// <param name="code">员工编号</param>
+        /// <param name="Title">标题</param>
+        /// <param name="Text">文本</param>
+        /// <param name="url">连接</param>
+        /// <returns></returns>
+        public static ResponseResult SendMSTDMessage(string code,string Title, string Text,string url)
+        {
+            DBHelper db = new DBHelper();
+            ResponseResult res = new ResponseResult();
+            try
+            {
+                DBHelper ssdb = new DBHelper("MSSQLCon");
+                string  token = token = DDCommon.GetAccessToken("dingew639q0gbtjsspqa", "jLpYavso9CJftwBIFzgs8B1BprBJYXwVEVd8-tStvmrJujJE-QiV68azc8EOPn0T");
+                List<string> list = ssdb.GetList<string>("select top 1  DingTalk from msgcenter_person where UserCode='" + code + "'");
+                if (list.Count == 0)
+                {
+                    throw new Exception($"未找到{code}员工信息");
+                }
+                IDingTalkClient client = new DefaultDingTalkClient("https://oapi.dingtalk.com/topapi/message/corpconversation/asyncsend_v2");
+                OapiMessageCorpconversationAsyncsendV2Request req = new OapiMessageCorpconversationAsyncsendV2Request();
+                req.AgentId = 821139979L;
+                req.UseridList = list[0];
+                //req.UseridList = "05273505221222370";
+                req.ToAllUser = false;
+                OapiMessageCorpconversationAsyncsendV2Request.MsgDomain obj1 = new OapiMessageCorpconversationAsyncsendV2Request.MsgDomain();
+                obj1.Msgtype = "action_card";
+
+                OapiMessageCorpconversationAsyncsendV2Request.ActionCardDomain obj2 = new OapiMessageCorpconversationAsyncsendV2Request.ActionCardDomain();
+                List<OapiMessageCorpconversationAsyncsendV2Request.BtnJsonListDomain> list4 = new List<OapiMessageCorpconversationAsyncsendV2Request.BtnJsonListDomain>();
+                OapiMessageCorpconversationAsyncsendV2Request.BtnJsonListDomain obj5 = new OapiMessageCorpconversationAsyncsendV2Request.BtnJsonListDomain();
+                list4.Add(obj5);
+                obj5.ActionUrl = url;
+                obj5.Title = "前往处理";
+                obj2.Title = Title;
+                obj2.BtnJsonList = list4;
+                obj2.BtnOrientation = "0";
+                obj2.Markdown = "![](http://221.2.76.14:8055/img/ms.jpg)" + "\n\n ### " + Text + "\n\n ### 时间：" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"); ;
+                obj2.Title = Title;
+                obj1.ActionCard = obj2;
+                req.Msg_ = obj1;
+                DingTalk.Api.Response.OapiMessageCorpconversationAsyncsendV2Response response = client.Execute<DingTalk.Api.Response.OapiMessageCorpconversationAsyncsendV2Response>(req, token);
+                if (!string.IsNullOrEmpty(response.ErrMsg))
+                {
+                    res.errorMsg = response.ErrMsg;
+                }
+                if (!string.IsNullOrEmpty(response.Errmsg))
+                {
+                    res.errorMsg = response.Errmsg;
+                }
+            }
+            catch (Exception ex)
+            {
+                res.errorMsg = ex.Message;
+            }
+            return res;
+        }
+
+        /// <summary>
+        /// 发送通知信息
+        /// </summary>
+        /// <param name="code">员工编号</param>
+        /// <param name="Title">标题</param>
+        /// <param name="Text">文本</param>
+        /// <param name="url">连接</param>
+        /// <returns></returns>
+        public static ResponseResult SendGHBBMessage(string code, string Title, string Text, string url)
+        {
+            DBHelper db = new DBHelper();
+            ResponseResult res = new ResponseResult();
+            try
+            {
+
+                string token = token = DDCommon.GetAccessToken("dingd0n4dknpwbjikxm4", "o7Ahj9AOl4GLzmTL5fmOWpVxtH8KlftbVGupwp8SgNeosUWEADOEhS69S1C3MiGW");
+
+                IDingTalkClient client = new DefaultDingTalkClient("https://oapi.dingtalk.com/topapi/message/corpconversation/asyncsend_v2");
+                OapiMessageCorpconversationAsyncsendV2Request req = new OapiMessageCorpconversationAsyncsendV2Request();
+                req.AgentId = 821201450L;
+                req.UseridList = code;
+                //req.UseridList = "05273505221222370";
+                req.ToAllUser = false;
+                OapiMessageCorpconversationAsyncsendV2Request.MsgDomain obj1 = new OapiMessageCorpconversationAsyncsendV2Request.MsgDomain();
+                obj1.Msgtype = "action_card";
+
+                OapiMessageCorpconversationAsyncsendV2Request.ActionCardDomain obj2 = new OapiMessageCorpconversationAsyncsendV2Request.ActionCardDomain();
+                List<OapiMessageCorpconversationAsyncsendV2Request.BtnJsonListDomain> list4 = new List<OapiMessageCorpconversationAsyncsendV2Request.BtnJsonListDomain>();
+                OapiMessageCorpconversationAsyncsendV2Request.BtnJsonListDomain obj5 = new OapiMessageCorpconversationAsyncsendV2Request.BtnJsonListDomain();
+                list4.Add(obj5);
+                obj5.ActionUrl = url;
+                obj5.Title = "前往处理";
+                obj2.Title = Title;
+                obj2.BtnJsonList = list4;
+                obj2.BtnOrientation = "0";
+                obj2.Markdown = "![](http://221.2.76.14:8055/img/gh.jpg)" + "\n\n ### " + Text + "\n\n ### 时间：" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"); ;
+                obj2.Title = Title;
+                obj1.ActionCard = obj2;
+                req.Msg_ = obj1;
+                DingTalk.Api.Response.OapiMessageCorpconversationAsyncsendV2Response response = client.Execute<DingTalk.Api.Response.OapiMessageCorpconversationAsyncsendV2Response>(req, token);
+                if (!string.IsNullOrEmpty(response.ErrMsg))
+                {
+                    res.errorMsg = response.ErrMsg;
+                }
+                if (!string.IsNullOrEmpty(response.Errmsg))
+                {
+                    res.errorMsg = response.Errmsg;
+                }
+            }
+            catch (Exception ex)
+            {
+                res.errorMsg = ex.Message;
+            }
+            return res;
+        }
+
+        /// <summary>
+        /// 发送待办信息
+        /// </summary>
+        /// <param name="dingid">钉钉ID</param>
+        /// <param name="Title">标题</param>
+        /// <param name="Text">文本</param>
+        /// <param name="url">url连接</param>
+        /// <returns></returns>
+        public static ResponseResult SendReplyMessage(string dingid, string Title, string Text, string url)
+        {
+            DBHelper db = new DBHelper();
+            ResponseResult res = new ResponseResult();
+            try
+            {
+     
+                string token = token = DDCommon.GetAccessToken("dingew639q0gbtjsspqa", "jLpYavso9CJftwBIFzgs8B1BprBJYXwVEVd8-tStvmrJujJE-QiV68azc8EOPn0T");
+                IDingTalkClient client = new DefaultDingTalkClient("https://oapi.dingtalk.com/topapi/workrecord/add");
+                OapiWorkrecordAddRequest req = new OapiWorkrecordAddRequest();
+                req.Userid = dingid;
+                req.CreateTime = DDCommon.GetTimeStamp();
+                req.Title = Title;
+                req.Url = url;
+                req.PcUrl = url;
+                List<OapiWorkrecordAddRequest.FormItemVoDomain> list2 = new List<OapiWorkrecordAddRequest.FormItemVoDomain>();
+                OapiWorkrecordAddRequest.FormItemVoDomain obj3 = new OapiWorkrecordAddRequest.FormItemVoDomain();
+                list2.Add(obj3);
+                obj3.Title = Title;
+                obj3.Content = Text;
+                req.FormItemList_ = list2;
+                req.PcOpenType = 2L;
+                OapiWorkrecordAddResponse response = client.Execute(req, token);
+                if (!string.IsNullOrEmpty(response.ErrMsg))
+                {
+                    res.errorMsg = response.ErrMsg;
+                }
+                if (!string.IsNullOrEmpty(response.Errmsg))
+                {
+                    res.errorMsg = response.Errmsg;
+                }
+                res.content = response.RecordId;
+            }
+            catch (Exception ex)
+            {
+                res.errorMsg = ex.Message;
+            }
+            return res;
+        }
+
+        /// <summary>
+        /// 更新待办状态
+        /// </summary>
+        /// <param name="Userid"></param>
+        /// <param name="RecordId"></param>
+        /// <returns></returns>
+        public static ResponseResult UpdateReplyMessage(string Userid, string RecordId)
+        {
+            DBHelper db = new DBHelper();
+            ResponseResult res = new ResponseResult();
+            try
+            {
+
+                string token = token = DDCommon.GetAccessToken("dingew639q0gbtjsspqa", "jLpYavso9CJftwBIFzgs8B1BprBJYXwVEVd8-tStvmrJujJE-QiV68azc8EOPn0T");
+                IDingTalkClient client = new DefaultDingTalkClient("https://oapi.dingtalk.com/topapi/workrecord/update");
+                OapiWorkrecordUpdateRequest req = new OapiWorkrecordUpdateRequest();
+                req.Userid = Userid;
+                req.RecordId = RecordId;
+                OapiWorkrecordUpdateResponse response = client.Execute(req, token);
+                if (!string.IsNullOrEmpty(response.ErrMsg))
+                {
+                    res.errorMsg = response.ErrMsg;
+                }
+                if (!string.IsNullOrEmpty(response.Errmsg))
+                {
+                    res.errorMsg = response.Errmsg;
+                }
+            }
+            catch (Exception ex)
+            {
+                res.errorMsg = ex.Message;
+            }
             return res;
         }
 

@@ -339,6 +339,7 @@ namespace DDWebApi
      * */
     public class ScoreList {
         public string proposal_dept { get; set; }
+        public string proposal_title { get; set; }
         public decimal score { get; set; }
         public int monthorder { get; set; }
     }
